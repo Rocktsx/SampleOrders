@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option csharp_namespace = "OrdersService";
+
+package Orders;
+
+service Orders {
+  rpc GetOrders (FilterOrderDto) returns (FilterOrderResultDto);
+  rpc GetOrder (OrderIdDto) returns (OrderDto);
+  rpc Add (AddedOrderDto) returns (OrderDto);
+  rpc Update (OrderDto) returns (OrderDto);
+  rpc Delete (OrderIdDto) returns (UpdatedOrderResultDto);
+}
+
+message FilterOrderDto {
+	string OrderDate = 1;
+}
+message FilterOrderResultDto { 
+  repeated OrderDto Orders= 1;
+}
+message AddedOrderDto { 
+  string OrderDate = 1;
+  string Remark = 2;
+  repeated OrderItemDto Items= 3;
+}
+message UpdatedOrderResultDto {
+  int32 Count = 1;
+}
+
+message OrderDto {
+  string Id = 1;
+  string OrderDate = 2;
+  string Remark = 3;
+  repeated OrderItemDto Items= 4;
+}
+ 
+message OrderItemDto {
+  string Id = 1;
+  string ProductId = 2;
+  string ProductName = 3;
+  int32 Count = 4;
+  float UnitPrice = 5;
+}
+message OrderIdDto {
+  string Id = 1;
+}
+

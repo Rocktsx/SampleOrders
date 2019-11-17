@@ -1,0 +1,118 @@
+﻿@page "/orders"
+@attribute [Authorize]
+
+@using BlazorApp.Data
+@using BlazorApp.Services.Abstract
+@inject IOrderService OrdersService
+
+<h1>Orders</h1>
+
+
+<p>
+    <button class="btn btn-primary" @onclick="OnAddClick">Add New Order</button>
+</p>
+@if (orders == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Operation</th>
+                <th>Order Date</th>
+                <th>Total Price</th>
+                <th>Remark</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in orders)
+            {
+                <tr>
+                    <td>
+                        <BlazorStrap.BSDropdown>
+                            <BlazorStrap.BSDropdownToggle class="btn btn-primary">Operation</BlazorStrap.BSDropdownToggle>
+                            <BlazorStrap.BSDropdownMenu>
+                                <BlazorStrap.BSDropdownItem @onclick="@(e => OnEditClick(order))">Change</BlazorStrap.BSDropdownItem>
+                                <BlazorStrap.BSDropdownItem @onclick="@(e => OnDelete(order))">Delete</BlazorStrap.BSDropdownItem>
+                            </BlazorStrap.BSDropdownMenu>
+                        </BlazorStrap.BSDropdown>
+                    </td>
+                    <td>@order.OrderDate.ToShortDateString()</td>
+                    <td>@order.GetTotal()</td>
+                    <td>@order.Remark</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (isAddVisible)
+{
+    <EditOrder Title="Add New Order" OnClose="OnAddClose" OnSave="OnAddSave" Order="currentOrder" />
+
+}
+@if (isEditVisible)
+{
+    <EditOrder Title="Edit Order" OnClose="OnEditClose" OnSave="OnEditSave" Order="currentOrder" />
+
+}
+
+@code {
+    private List<Order> orders;
+
+    private bool isAddVisible = false;
+
+    private bool isEditVisible = false;
+
+    private Order currentOrder;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await OrdersService.GetOrdersAsync();
+        orders = result.ToList();
+
+    }
+
+
+    private void OnAddClick()
+    {
+        isAddVisible = true;
+        currentOrder = new Order() { OrderDate = DateTime.Now };
+    }
+    private void OnAddClose(MouseEventArgs e)
+    {
+        isAddVisible = false;
+        currentOrder = null;
+    }
+    private async Task OnAddSave(MouseEventArgs e)
+    {
+        currentOrder = await OrdersService.AddAsync(currentOrder);
+        orders.Add(currentOrder);
+        OnAddClose(e);
+
+    }
+    private void OnEditClick(Order order)
+    {
+        isEditVisible = true;
+        currentOrder = order;
+    }
+    private void OnEditClose(MouseEventArgs e)
+    {
+        isEditVisible = false;
+        currentOrder = null;
+    }
+    private async Task OnEditSave(MouseEventArgs e)
+    {
+        await OrdersService.UpdateAsync(currentOrder);
+        OnEditClose(e);
+
+    }
+
+    private async Task OnDelete(Order order)
+    {
+        await OrdersService.DeleteAsync(order.OrderId);
+        orders.Remove(order);
+    }
+}

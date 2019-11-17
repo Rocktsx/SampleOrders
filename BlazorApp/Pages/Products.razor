@@ -1,0 +1,143 @@
+﻿@page "/products"
+@attribute [Authorize]
+
+@using BlazorApp.Data
+@using BlazorApp.Services.Abstract
+@inject IProductService ProductsService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h1>Products</h1>
+
+<p>
+    <button class="btn btn-primary" @onclick="OnAddClick">Add New Product</button>
+</p>
+
+
+
+@if (products == null)
+{
+    <p><em>Loading...</em></p>
+}
+
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Operation</th>
+                <th>Name</th>
+                <th>Unit Price</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>
+                        @*<button class="btn btn-primary" @onclick="@(e => OnEditClick(product))">Change</button>
+                        <button class="btn btn-primary" @onclick="@(e => OnDelete(product))">Delete</button>*@ 
+                        <BlazorStrap.BSDropdown >
+                            <BlazorStrap.BSDropdownToggle class="btn btn-primary">Operation</BlazorStrap.BSDropdownToggle>
+                            <BlazorStrap.BSDropdownMenu>
+                                <BlazorStrap.BSDropdownItem @onclick="@(e => OnEditClick(product))">Change</BlazorStrap.BSDropdownItem>
+                                <BlazorStrap.BSDropdownItem @onclick="@(e => OnDelete(product))">Delete</BlazorStrap.BSDropdownItem>
+                            </BlazorStrap.BSDropdownMenu>
+                        </BlazorStrap.BSDropdown>
+                        
+                    </td>
+                    <td>@product.ProductName</td>
+                    <td>@product.UnitPrice.ToString("F2")</td>
+                    <td>@product.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (isAddVisible)
+{
+    <EditProduct Title="Add New Product" OnClose="OnAddClose" OnSave="OnAddSave" Product="currentProduct" />
+
+}
+@if (isEditVisible)
+{
+    <EditProduct Title="Edit Product" OnClose="OnEditClose" OnSave="OnEditSave" Product="currentProduct" />
+
+}
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    private List<Product> products;
+
+    private bool isAddVisible = false;
+
+    private bool isEditVisible = false;
+
+    private Product currentProduct;
+    private int i = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Console.WriteLine($"{user.Identity.Name} is authenticated.");
+        }
+        else
+        {
+            Console.WriteLine("The user is NOT authenticated.");
+        }
+
+        var result = await ProductsService.GetProductsAsync("");
+
+        products = result == null ? new List<Product>() : result.ToList();
+
+
+    }
+
+
+    private void OnAddClick()
+    {
+        isAddVisible = true;
+        currentProduct = new Product();
+    }
+    private void OnAddClose(MouseEventArgs e)
+    {
+        isAddVisible = false;
+        currentProduct = null;
+    }
+    private async Task OnAddSave(MouseEventArgs e)
+    {
+        await ProductsService.AddProductAsync(currentProduct);
+        products.Add(currentProduct);
+        OnAddClose(e);
+
+    }
+    private void OnEditClick(Product product)
+    {
+        isEditVisible = true;
+        currentProduct = product;
+    }
+    private void OnEditClose(MouseEventArgs e)
+    {
+        isEditVisible = false;
+        currentProduct = null;
+    }
+    private async Task OnEditSave(MouseEventArgs e)
+    {
+        await ProductsService.UpdateProductAsync(currentProduct);
+        //products.Add(currentProduct);
+        OnEditClose(e);
+
+    }
+    private async Task OnDelete(Product product)
+    {
+        await ProductsService.DeleteProductAsync(product.ProductId);
+        products.Remove(product);
+    }
+}

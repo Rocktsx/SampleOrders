@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option csharp_namespace = "OrdersService";
+
+package Products;
+
+
+service Products {
+  rpc GetProducts (FilterProductDto) returns (stream ProductDto);
+  rpc GetProduct (ProductIdDto) returns (ProductDto);
+  rpc Add (AddedProductDto) returns (ProductDto);
+  rpc Update (ProductDto) returns (UpdatedResultDto);
+  rpc Delete (ProductIdDto) returns (UpdatedResultDto);
+}
+message AddedProductDto { 
+  string Name = 1;
+  string Description = 2;
+  float UnitPrice = 3;
+}
+message UpdatedResultDto {
+  int32 Count = 1;
+}
+
+message ProductDto {
+  string Id = 1;
+  string Name = 2;
+  string Description = 3;
+  float UnitPrice = 4;
+}
+message ProductIdDto {
+  string Id = 1;
+}
+message FilterProductDto {
+	string name = 1;
+}
+ 

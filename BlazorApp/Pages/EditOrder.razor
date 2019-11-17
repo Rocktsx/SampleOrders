@@ -1,0 +1,110 @@
+﻿
+@using BlazorApp.Data
+
+<div class="modal fade show editOrder" tabindex="-1" role="dialog" >
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+        <div class="modal-content" >
+            <div class="modal-header">
+                <h5 class="modal-title">@Title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="OnClose">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" > 
+                <div class="card bg-light mb-3">
+                    <div class="card-header">
+                        <form>
+                    <div class="form-group">
+                        <label for="productName">Order Date</label>
+                        <input type="text" class="form-control" id="orderDate" name="productName" @bind="Order.OrderDate" @bind:format="yyyy-MM-dd"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="unitPrice">Total Price</label>
+                        <label style="font-weight:700;">@Order.GetTotal().ToString("F2")</label> 
+                    </div>
+                    <div class="form-group">
+                        <label for="descrption">Remark</label>
+                        <textarea class="form-control" id="descrption" name="descrption" @bind="Order.Remark"></textarea>
+                    </div>
+                </form>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Products</h5>
+                        <p>
+                            <button class="btn btn-primary" @onclick="OnAddClick">Add Product</button>
+                        </p>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Operator</th>
+                                    <th>Product Name</th>
+                                    <th>Unit Price</th>
+                                    <th>Count</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Order.OrderItems)
+                                {
+                                    <tr>
+                                        <td>
+                                            <button class="btn btn-primary" @onclick="@(e => OnDelete(item))">Delete</button>
+                                        </td>
+                                        <td>@item.ProductName</td>
+                                        <td>@item.UnitPrice</td>
+                                        <td><input type="text" class="form-control" @bind="@item.Count" /></td>
+                                        <td>@item.GetTotal().ToString("F2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        @if (isAddProduct)
+                        {
+                            <OrderProducts AddProduct="AddProduct" OnClose="OnAddClose"></OrderProducts>
+                        }
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="OnClose">Close</button>
+                <button type="button" class="btn btn-primary" @onclick="OnSave">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public Order Order { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+    private bool isAddProduct = false;
+
+    private void OnAddClick()
+    {
+        isAddProduct = true;
+    }
+     private async Task AddProduct(Product product)
+    {
+        await Order.AddProductAsync(product, 1);
+    }
+    private void OnAddClose(MouseEventArgs e)
+    {
+        isAddProduct = false;
+    }
+
+     private async Task OnDelete(OrderItem item)
+    {
+        await Order.DeleteProductAsync(item.ProductId);
+    }
+}
